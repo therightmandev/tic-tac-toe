@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>canvas</title>
+	<style> *{
+		margin: 0;
+		padding: 0;
+	}
+
+	canvas{
+		background: #eee;
+		display: block;
+		margin: 0 auto;
+	}
+	</style>
+</head>
+<body>
+<canvas id="canvas" width="200" height="200"></canvas>
+<p id="info"></p>
+
+<script type="text/javascript">
+	var canvas = document.getElementById('canvas');
+	var ctx = canvas.getContext('2d');
+	var paragraph = document.getElementById('info');
+	var playing = 1;
+
+	document.addEventListener("mousemove", mouseMoveHandler);
+	document.addEventListener("click", mouseClickHandler);
+
+	function mouseMoveHandler(e) {
+		canvasRect = canvas.getBoundingClientRect();
+		mouseRelativeX = e.clientX - canvasRect.left;
+		mouseRelativeY = e.clientY - canvasRect.top;
+		board.hover(mouseRelativeX, mouseRelativeY);
+	}
+
+	function mouseClickHandler(e){
+		canvasRect = canvas.getBoundingClientRect();
+		mouseRelativeX = e.clientX - canvasRect.left;
+		mouseRelativeY = e.clientY - canvasRect.top;
+		board.click(mouseRelativeX, mouseRelativeY);
+	}
+
+	var board = {
+		stripeThickness: 3,
+		rows: 3,
+		columns: 3,
+		squares: [],
+		squareThickness: canvas.width/3,
+		init: function(){
+			//squares:
+			for (c=0; c<this.columns; c++){
+				for (r=0; r<this.rows; r++){
+					this.squares.push({
+						x: c*(canvas.width/this.columns),
+						y: r*(canvas.height/this.rows),
+						hover:false,
+						state: 0
+					})
+				}
+			}
+		},
+		draw: function(){
+			for (s=0; s<this.squares.length; s++){
+				var square = this.squares[s];
+				if(square.hover){
+					ctx.fillStyle = "pink";
+					ctx.fillRect(square.x, square.y, this.squareThickness, this.squareThickness);
+				}
+			}
+			//grid:
+			ctx.fillStyle = "green";
+			ctx.fillRect(canvas.width/3-this.stripeThickness/2, 0, this.stripeThickness, canvas.height);
+			ctx.fillRect(canvas.width*(2/3)-this.stripeThickness/2, 0, this.stripeThickness, canvas.height);
+			ctx.fillRect(0, canvas.height/3-this.stripeThickness/2, canvas.width, this.stripeThickness);
+			ctx.fillRect(0, canvas.height*(2/3)-this.stripeThickness/2, canvas.width, this.stripeThickness);
+
+			//balls and crosses:
+			for (s=0; s<this.squares.length; s++){
+				var square = this.squares[s];
+				if (square.state == 1){
+					ctx.beginPath();
+					ctx.arc(square.x+this.squareThickness/2, square.y+this.squareThickness/2, 20, 0, Math.PI*2, true);
+					ctx.fillStyle = "black";
+					ctx.fill();
+					ctx.closePath();
+				}else if(square.state == 2){
+					ctx.beginPath();
+					ctx.arc(square.x+this.squareThickness/2, square.y+this.squareThickness/2, 20, 0, Math.PI*2, true);
+					ctx.fillStyle = "red";
+					ctx.fill();
+					ctx.closePath();
+				}
+
+			}
+		},
+		hover: function(mouseX, mouseY){
+			for(s=0; s<this.squares.length; s++){
+				var square = this.squares[s];
+				if(mouseX>=square.x &&
+					mouseX<=square.x+this.squareThickness &&
+					mouseY>=square.y &&
+					mouseY<=square.y+this.squareThickness){
+					square.hover = true;
+				}else{
+					square.hover = false;
+				}
+			}
+		},
+		click: function(mouseX, mouseY){
+			for (s=0; s<this.squares.length;s++){
+				var square = this.squares[s];
+				if(square.hover && square.state==0){
+					if(playing==1){
+						square.state = 1;
+						playing = 2;
+					}else if(playing==2){
+						square.state = 2;
+						playing = 1;
+					}
+				}
+			}
+		},
+		checkVictory: function(){
+
+			//columns:
+			for (c=0; c<this.columns; c++){
+				var bursted = false;
+				var firstValue = this.squares[c*this.rows].state;
+				if(firstValue!=0){
+					for(r=0; r<this.rows; r++){
+						if(this.squares[c*this.rows+r].state!=firstValue){
+							bursted = true;
+						}
+						if(bursted){break;}
+					}
+					if(!bursted){
+						playing = this.squares[c*this.rows].state + 2;
+					}
+				}
+			}
+
+			//rows:
+			for (r=0; r<this.rows; r++){				
+				var bursted = false;
+				var firstValue = this.squares[r].state;
+				if(firstValue!=0){
+					for(c=0; c<this.columns; c++){
+						if(firstValue!=this.squares[r+c*this.rows].state){
+							bursted = true;
+						}
+						if(bursted){break;}
+					}
+					if(!bursted){
+						playing = firstValue + 2;
+					}
+				}
+			}
+
+			//diagonals(hard coded:
+			if(this.squares[0].state!=0){
+				if(this.squares[0].state==this.squares[4].state &&
+					this.squares[0].state == this.squares[8].state){
+					playing = this.squares[0].state + 2;
+				}
+			}
+			if(this.squares[6].state!=0){
+				if(this.squares[6].state==this.squares[4].state &&
+					this.squares[6].state == this.squares[2].state){
+					playing = this.squares[6].state + 2;
+				}
+			}
+
+
+			if(playing == 3){
+				paragraph.innerHTML = "player1";
+			}else if(playing == 4){
+				paragraph.innerHTML = "player2";
+			}
+		}
+	}
+
+	function gameLoop(){
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		board.draw();
+		board.checkVictory();
+		requestAnimationFrame(gameLoop);
+	}
+	board.init();
+	gameLoop();
+
+</script>
+</body>
+</html>
