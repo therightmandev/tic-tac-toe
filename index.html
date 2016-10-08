@@ -19,10 +19,10 @@
 <p id="info"></p>
 
 <script type="text/javascript">
-	var canvas = document.getElementById('canvas');
-	var ctx = canvas.getContext('2d');
-	var paragraph = document.getElementById('info');
-	var playing = 1;
+	const canvas = document.getElementById('canvas');
+	const ctx = canvas.getContext('2d');
+	const paragraph = document.getElementById('info');
+	let playing = 1;
 
 	document.addEventListener("mousemove", mouseMoveHandler);
 	document.addEventListener("click", mouseClickHandler);
@@ -41,7 +41,7 @@
 		board.click(mouseRelativeX, mouseRelativeY);
 	}
 
-	var board = {
+	const board = {
 		stripeThickness: 3,
 		rows: 3,
 		columns: 3,
@@ -141,7 +141,7 @@
 			}
 
 			//rows:
-			for (r=0; r<this.rows; r++){				
+			for (r=0; r<this.rows; r++){
 				var bursted = false;
 				var firstValue = this.squares[r].state;
 				if(firstValue!=0){
